@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Content Include="src\docker\init.cql" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="src\UrlShortenerApp1.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CassandraCSharpDriver" Version="3.22.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
+	</ItemGroup>
+
+</Project>
