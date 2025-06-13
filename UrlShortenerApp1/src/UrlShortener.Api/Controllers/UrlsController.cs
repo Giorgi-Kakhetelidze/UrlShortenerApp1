@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Runtime.InteropServices;
 using UrlShortenerApp1.src.UrlShortener.Api.Models;
 using UrlShortenerApp1.src.UrlShortener.Api.Services.Interfaces;
 
@@ -15,6 +16,14 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
             _urlService = urlService ?? throw new ArgumentNullException(nameof(urlService));
         }
 
+        private static TimeZoneInfo GetGeorgiaTimeZone()
+        {
+            // Windows uses "Eastern Standard Time", Linux uses "America/New_York"
+            return TimeZoneInfo.FindSystemTimeZoneById(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Eastern Standard Time" : "America/New_York"
+            );
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateUrl([FromBody] ShortUrlCreateRequest request)
         {
@@ -26,7 +35,18 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
             try
             {
                 var result = await _urlService.CreateAsync(request);
-                return CreatedAtAction(nameof(GetUrl), new { shortCode = result.ShortCode }, result);
+                var georgiaTimeZone = GetGeorgiaTimeZone();
+                var georgiaCreatedAt = TimeZoneInfo.ConvertTimeFromUtc(result.CreatedAt, georgiaTimeZone);
+
+                return CreatedAtAction(nameof(GetUrl), new { shortCode = result.ShortCode }, new
+                {
+                    result.ShortCode,
+                    result.OriginalUrl,
+                    CreatedAt = georgiaCreatedAt,
+                    result.ExpirationDate,
+                    result.ClickCount,
+                    result.IsActive
+                });
             }
             catch (InvalidOperationException ex)
             {
@@ -37,20 +57,30 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
                 return StatusCode(500, new { error = "An error occurred while creating the URL.", details = ex.Message });
             }
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAllUrls()
         {
             try
             {
                 var urls = await _urlService.GetAllAsync();
-                return Ok(urls);
+                var georgiaTimeZone = GetGeorgiaTimeZone();
+                var result = urls.Select(url => new
+                {
+                    url.ShortCode,
+                    url.OriginalUrl,
+                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(url.CreatedAt, georgiaTimeZone),
+                    url.ExpirationDate,
+                    url.ClickCount,
+                    url.IsActive
+                });
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "An error occurred while retrieving URLs.", details = ex.Message });
             }
         }
-
 
         [HttpGet("{shortCode}")]
         public async Task<IActionResult> GetUrl([FromRoute] string shortCode)
@@ -59,7 +89,19 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
             {
                 var url = await _urlService.GetByShortCodeAsync(shortCode);
                 if (url == null) return NotFound(new { error = "URL not found." });
-                return Ok(url);
+
+                var georgiaTimeZone = GetGeorgiaTimeZone();
+                var georgiaCreatedAt = TimeZoneInfo.ConvertTimeFromUtc(url.CreatedAt, georgiaTimeZone);
+
+                return Ok(new
+                {
+                    url.ShortCode,
+                    url.OriginalUrl,
+                    CreatedAt = georgiaCreatedAt,
+                    url.ExpirationDate,
+                    url.ClickCount,
+                    url.IsActive
+                });
             }
             catch (Exception ex)
             {
@@ -77,7 +119,19 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
             {
                 var updated = await _urlService.UpdateAsync(shortCode, request);
                 if (updated == null) return NotFound(new { error = "URL not found." });
-                return Ok(updated);
+
+                var georgiaTimeZone = GetGeorgiaTimeZone();
+                var georgiaCreatedAt = TimeZoneInfo.ConvertTimeFromUtc(updated.CreatedAt, georgiaTimeZone);
+
+                return Ok(new
+                {
+                    updated.ShortCode,
+                    updated.OriginalUrl,
+                    CreatedAt = georgiaCreatedAt,
+                    updated.ExpirationDate,
+                    updated.ClickCount,
+                    updated.IsActive
+                });
             }
             catch (Exception ex)
             {

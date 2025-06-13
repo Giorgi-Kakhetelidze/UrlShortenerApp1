@@ -38,13 +38,7 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
                 ? Base62Encoder.Encode(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
                 : request.CustomAlias;
 
-            // Check if the short code already exists
-            var existing = await GetByShortCodeAsync(shortCode);
-            if (existing != null)
-            {
-                throw new InvalidOperationException("Short code already exists. Please choose a different custom alias.");
-            }
-
+            // Always use the current UTC time for creation
             var createdAt = DateTime.UtcNow;
             var expiration = request.ExpirationDate;
 
@@ -57,7 +51,7 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
             {
                 ShortCode = shortCode,
                 OriginalUrl = request.OriginalUrl,
-                CreatedAt = createdAt,
+                CreatedAt = createdAt, // Set here
                 ExpirationDate = expiration,
                 ClickCount = 0,
                 IsActive = true
