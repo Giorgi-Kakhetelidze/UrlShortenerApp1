@@ -1,13 +1,16 @@
 ﻿using Cassandra;
 using Microsoft.OpenApi.Models;
-using UrlShortenerApp1.src.UrlShortener.Api.Services.Interfaces;
+using UrlShortenerApp1.src.UrlShortener.Api.Services.Background;
 using UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations;
+using UrlShortenerApp1.src.UrlShortener.Api.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHostedService<ExpirationCleanupService>();
+
 
 builder.Services.AddCors(options =>
 {

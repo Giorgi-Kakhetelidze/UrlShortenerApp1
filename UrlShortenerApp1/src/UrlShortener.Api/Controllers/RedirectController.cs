@@ -22,15 +22,20 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
         public async Task<IActionResult> RedirectToOriginal(string shortCode)
         {
             var url = await _urlService.GetByShortCodeAsync(shortCode);
-            if (url == null || (url.ExpirationDate.HasValue && url.ExpirationDate.Value < DateTime.UtcNow))
+
+            if (url == null ||
+                (url.ExpirationDate.HasValue && url.ExpirationDate.Value < DateTime.UtcNow) ||
+                !url.IsActive)
             {
-                Console.WriteLine($"Redirect failed for {shortCode}: URL not found or expired");
-                return NotFound("This link has expired or doesn't exist.");
+                Console.WriteLine($"Redirect failed for {shortCode}: URL not found, expired, or inactive");
+                return NotFound("This link has expired, is inactive, or doesn't exist.");
             }
 
+            // Increment click count
             await _urlService.IncrementClickCountAsync(shortCode);
             Console.WriteLine($"Incremented click count for {shortCode}");
 
+            // Log analytics
             var request = _contextAccessor.HttpContext?.Request;
             var userAgent = request?.Headers["User-Agent"].ToString() ?? "unknown";
             var ipAddress = request?.HttpContext?.Connection?.RemoteIpAddress?.ToString() ?? "unknown";
@@ -47,5 +52,7 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
 
             return Redirect(url.OriginalUrl);
         }
+
+
     }
 }

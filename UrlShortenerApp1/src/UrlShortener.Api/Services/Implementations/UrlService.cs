@@ -38,6 +38,13 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
                 ? Base62Encoder.Encode(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
                 : request.CustomAlias;
 
+            // Check if the short code already exists
+            var existing = await GetByShortCodeAsync(shortCode);
+            if (existing != null)
+            {
+                throw new InvalidOperationException("Short code already exists. Please choose a different custom alias.");
+            }
+
             var createdAt = DateTime.UtcNow;
             var expiration = request.ExpirationDate;
 
@@ -56,7 +63,6 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
                 IsActive = true
             };
         }
-
         public async Task<ShortUrl?> UpdateAsync(string shortCode, ShortUrlUpdateRequest request)
         {
             var existing = await GetByShortCodeAsync(shortCode);
@@ -82,8 +88,7 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
 
             if (result == null) return;
 
-            int currentCount = (int)result["click_count"];
-
+            int currentCount = result["click_count"] is int i ? i : 0;
             int newCount = currentCount + 1;
 
             var updateQuery = "UPDATE urls SET click_count = ? WHERE short_code = ?";
@@ -106,7 +111,7 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
                     OriginalUrl = row["original_url"]?.ToString() ?? "",
                     CreatedAt = row["created_at"] is DateTime createdAt ? createdAt : DateTime.MinValue,
                     ExpirationDate = row["expiration_date"] as DateTime?,
-                    ClickCount = row["click_count"] is long count ? (int)count : 0,
+                    ClickCount = row["click_count"] is int count ? count : 0,
                     IsActive = row["is_active"] is bool active && active
                 });
             }

@@ -28,12 +28,15 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Controllers
                 var result = await _urlService.CreateAsync(request);
                 return CreatedAtAction(nameof(GetUrl), new { shortCode = result.ShortCode }, result);
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = "An error occurred while creating the URL.", details = ex.Message });
             }
         }
-
         [HttpGet]
         public async Task<IActionResult> GetAllUrls()
         {
