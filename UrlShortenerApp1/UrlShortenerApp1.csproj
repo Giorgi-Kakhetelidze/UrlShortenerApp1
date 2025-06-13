@@ -7,10 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Content Include="src\docker\init.cql" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Include="src\UrlShortenerApp1.csproj" />
 	</ItemGroup>
 
