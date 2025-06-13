@@ -9,11 +9,12 @@
 		<PackageReference Include="CassandraCSharpDriver" Version="3.18.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.10.0-preview-*" />
-		<!-- Update to latest preview -->
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.10.0-preview.2" />
 	</ItemGroup>
 	<ItemGroup>
 		<Folder Include="UrlShortener.Api\Services\Interfaces\" />
 		<Folder Include="UrlShortener.Api\Services\Implementations\" />
+		<Folder Include="UrlShortener.Api\Services\Background\" />
+		<Folder Include="UrlShortener.API\Data\" />
 	</ItemGroup>
 </Project>

@@ -1,5 +1,7 @@
 ﻿using Cassandra;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using UrlShortener.API.Data;
 using UrlShortenerApp1.src.UrlShortener.Api.Services.Background;
 using UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations;
 using UrlShortenerApp1.src.UrlShortener.Api.Services.Interfaces;
@@ -10,7 +12,6 @@ builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHostedService<ExpirationCleanupService>();
-
 
 builder.Services.AddCors(options =>
 {
@@ -32,15 +33,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddSingleton<Cassandra.ISession>(sp =>
-{
-    var cluster = Cluster.Builder()
-        .AddContactPoint("cassandra")
-        .WithPort(9042)
-        .Build();
-
-    return cluster.Connect("url_shortener");
-});
+var cassandraConnector = new CassandraConnector();
+var cassandraSession = cassandraConnector.ConnectAsync().GetAwaiter().GetResult();
+builder.Services.AddSingleton<Cassandra.ISession>(cassandraSession);
 
 builder.Services.AddScoped<IUrlService, UrlService>();
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
