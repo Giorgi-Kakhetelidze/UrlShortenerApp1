@@ -38,20 +38,26 @@ namespace UrlShortenerApp1.src.UrlShortener.Api.Services.Implementations
                 ? Base62Encoder.Encode(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds())
                 : request.CustomAlias;
 
-            // Always use the current UTC time for creation
             var createdAt = DateTime.UtcNow;
             var expiration = request.ExpirationDate;
 
             var query = "INSERT INTO urls (short_code, original_url, created_at, expiration_date, click_count, is_active) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)";
+                        "VALUES (?, ?, ?, ?, ?, ?) IF NOT EXISTS";
 
-            await _session.ExecuteAsync(new SimpleStatement(query, shortCode, request.OriginalUrl, createdAt, expiration, 0, true));
+            var statement = new SimpleStatement(query, shortCode, request.OriginalUrl, createdAt, expiration, 0, true);
+            var result = await _session.ExecuteAsync(statement);
+
+            var applied = result.FirstOrDefault()?["[applied]"] as bool?;
+            if (applied.HasValue && !applied.Value)
+            {
+                throw new InvalidOperationException($"Alias '{shortCode}' already exists. Please try a different alias.");
+            }
 
             return new ShortUrl
             {
                 ShortCode = shortCode,
                 OriginalUrl = request.OriginalUrl,
-                CreatedAt = createdAt, // Set here
+                CreatedAt = createdAt,
                 ExpirationDate = expiration,
                 ClickCount = 0,
                 IsActive = true
